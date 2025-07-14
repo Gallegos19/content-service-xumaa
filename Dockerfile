@@ -1,24 +1,33 @@
 # Stage 1: Builder
 FROM node:18-alpine AS builder
 
-# Dependencias del sistema
+# 1. Instalar dependencias del sistema
 RUN apk add --no-cache openssl python3 make g++ git libc6-compat
 
 WORKDIR /app
 
-# 1. Instalar dependencias
+# 2. Instalar dependencias de Node
 COPY package.json package-lock.json* ./
-COPY prisma ./prisma/
-
 RUN npm ci
 
-# 2. Generar cliente Prisma
+# 3. Configurar Prisma
+COPY prisma ./prisma/
 ENV DATABASE_URL="postgresql://user:password@localhost:5432/db"
-RUN npx prisma generate || (echo "Prisma generate failed" && exit 1)
+RUN npx prisma generate || (echo "PRISMA GENERATE FAILED" && exit 1)
 
-# 3. Copiar código y construir
+# 4. Copiar código fuente
 COPY . .
-RUN npm run build || (echo "Build failed" && cat package.json && exit 1)
+
+# 5. Verificar estructura de archivos
+RUN ls -l src/ && ls -l prisma/
+
+# 6. Ejecutar build con más verbosidad
+RUN npm run build --verbose || \
+    (echo "BUILD FAILED - SHOWING TS CONFIG" && \
+     cat tsconfig.json && \
+     echo "SHOWING PACKAGE.JSON" && \
+     cat package.json && \
+     exit 1)
 
 # Stage 2: Runtime
 FROM node:18-alpine
