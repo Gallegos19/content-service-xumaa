@@ -13,7 +13,7 @@ RUN npm ci
 # 3. Configurar Prisma
 COPY prisma ./prisma/
 ENV DATABASE_URL="postgresql://user:password@localhost:5432/db"
-RUN npx prisma generate || (echo "PRISMA GENERATE FAILED" && exit 1)
+RUN npx prisma generate --no-engine || (echo "PRISMA GENERATE FAILED" && exit 1)
 
 # 4. Copiar código fuente
 COPY . .
