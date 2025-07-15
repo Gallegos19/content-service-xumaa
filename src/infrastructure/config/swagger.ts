@@ -28,7 +28,6 @@ const options: swaggerJsdoc.Options = {
         - 401: No autorizado
         - 403: Prohibido
         - 404: No encontrado
-        - 500: Error interno del servidor
       `,
       contact: {
         name: 'Soporte Técnico',
@@ -41,12 +40,8 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: 'http://localhost:3004',
-        description: 'Servidor de desarrollo',
-      },
-      {
-        url: 'https://api.educaplus.com',
-        description: 'Servidor de producción',
+        url: env.API_BASE_URL || 'http://localhost:3004',
+        description: env.NODE_ENV === 'production' ? 'Production server' : 'Development server'
       }
     ],
     components: {
@@ -64,7 +59,7 @@ const options: swaggerJsdoc.Options = {
   },
   apis: [
     './src/infrastructure/web/**/*.routes.ts',
-    './src/infrastructure/web/**/*.docs.ts',
+    './src/infrastructure/web/**/*.controller.ts',
     './src/domain/**/*.entity.ts'
   ]
 };

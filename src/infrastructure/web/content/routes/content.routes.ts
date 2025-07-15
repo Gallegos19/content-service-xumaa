@@ -18,6 +18,72 @@ const contentController = container.get<ContentController>(TYPES.ContentControll
 // Add this for JSON body parsing
 const jsonParser = bodyParser.json();
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     ApiResponse:
+ *       type: object
+ *       properties:
+ *         status:
+ *           type: string
+ *           example: success
+ *         data:
+ *           type: object
+ *           description: Datos de la respuesta
+ *         meta:
+ *           type: object
+ *           description: Metadatos adicionales (paginación, etc)
+ *       required:
+ *         - status
+ * 
+ *     PaginationMeta:
+ *       type: object
+ *       properties:
+ *         totalItems:
+ *           type: integer
+ *           example: 100
+ *         itemCount:
+ *           type: integer
+ *           example: 10
+ *         itemsPerPage:
+ *           type: integer
+ *           example: 10
+ *         totalPages:
+ *           type: integer
+ *           example: 10
+ *         currentPage:
+ *           type: integer
+ *           example: 1
+ * 
+ *   responses:
+ *     Unauthorized:
+ *       description: No autorizado - Token inválido o faltante
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 example: error
+ *               message:
+ *                 type: string
+ *                 example: No autorizado
+ *     ServerError:
+ *       description: Error interno del servidor
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 example: error
+ *               message:
+ *                 type: string
+ *                 example: Error interno del servidor
+ */
 
 /**
  * @swagger
@@ -47,11 +113,8 @@ const jsonParser = bodyParser.json();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
+ *               $ref: '#/components/schemas/ApiResponse'
  *               properties:
- *                 status:
- *                   type: string
- *                   example: success
  *                 data:
  *                   type: array
  *                   items:
@@ -79,18 +142,16 @@ router.get('/all-tips', (req, res) => contentController.getAllTips(req, res));
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/Topic'
+ *               $ref: '#/components/schemas/ApiResponse'
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Topic'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.get('/topics', (req, res) => contentController.getAllTopics(req, res));
 
@@ -110,18 +171,16 @@ router.get('/topics', (req, res) => contentController.getAllTopics(req, res));
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/Module'
+ *               $ref: '#/components/schemas/ApiResponse'
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Module'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.get('/modules', (req, res) => contentController.getModules(req, res));
 
@@ -147,18 +206,16 @@ router.get('/modules', (req, res) => contentController.getModules(req, res));
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       $ref: '#/components/schemas/Module'
+ *               $ref: '#/components/schemas/ApiResponse'
+ *               properties:
+ *                 data:
+ *                   $ref: '#/components/schemas/Module'
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.get('/module/:moduleId', (req, res) => contentController.getModuleById(req, res));
 
@@ -235,18 +292,16 @@ router.get('/module/:moduleId', (req, res) => contentController.getModuleById(re
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       $ref: '#/components/schemas/Content'
+ *               $ref: '#/components/schemas/ApiResponse'
+ *               properties:
+ *                 data:
+ *                   $ref: '#/components/schemas/Content'
  *       400:
  *         $ref: '#/components/responses/ValidationError'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.post('/', validate(createContentSchema), (req, res) => contentController.createContent(req, res));
 
@@ -272,18 +327,16 @@ router.post('/', validate(createContentSchema), (req, res) => contentController.
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       $ref: '#/components/schemas/Content'
+ *               $ref: '#/components/schemas/ApiResponse'
+ *               properties:
+ *                 data:
+ *                   $ref: '#/components/schemas/Content'
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.get('/:id', (req, res) => contentController.getContentById(req, res));
 
@@ -344,20 +397,18 @@ router.get('/:id', (req, res) => contentController.getContentById(req, res));
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       $ref: '#/components/schemas/Content'
+ *               $ref: '#/components/schemas/ApiResponse'
+ *               properties:
+ *                 data:
+ *                   $ref: '#/components/schemas/Content'
  *       400:
  *         $ref: '#/components/responses/ValidationError'
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.put('/:id', validate(updateContentSchema), contentController.updateContent);
 
@@ -383,129 +434,13 @@ router.put('/:id', validate(updateContentSchema), contentController.updateConten
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.delete('/:id', (req, res) => contentController.deleteContent(req, res));
 
-// /**
-//  * @swagger
-//  * /api/content/by-topic/{topicId}:
-//  *   get:
-//  *     summary: Obtiene contenido por ID de tema
-//  *     tags: [Content]
-//  *     security:
-//  *       - bearerAuth: []
-//  *     parameters:
-//  *       - in: path
-//  *         name: topicId
-//  *         required: true
-//  *         schema:
-//  *           type: string
-//  *           format: uuid
-//  *         description: ID del tema
-//  *     responses:
-//  *       200:
-//  *         description: Lista de contenido para el tema especificado
-//  *         content:
-//  *           application/json:
-//  *             schema:
-//  *               allOf:
-//  *                 - $ref: '#/components/schemas/SuccessResponse'
-//  *                 - type: object
-//  *                   properties:
-//  *                     data:
-//  *                       type: array
-//  *                       items:
-//  *                         $ref: '#/components/schemas/Content'
-//  *       401:
-//  *         $ref: '#/components/responses/UnauthorizedError'
-//  *       500:
-//  *         $ref: '#/components/responses/InternalServerError'
-//  */
-// router.get('/by-topic/:topicId', (req, res) => contentController.getContentByTopic(req, res));
-
-/**
- * @swagger
- * /api/content/by-topic/{topic_id}:
- *   get:
- *     summary: Obtiene todo el contenido relacionado a un tema específico
- *     tags: [Content]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: topic_id
- *         schema:
- *           type: string
- *           format: uuid
- *         required: true
- *         description: ID del tema
- *     responses:
- *       200:
- *         description: Lista de contenido obtenida exitosamente
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/Content'
- *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
- *       404:
- *         $ref: '#/components/responses/NotFoundError'
- *       500:
- *         $ref: '#/components/responses/InternalServerError'
- */
-router.get('/by-topic/:topic_id', (req, res) => contentController.getContentByTopicId(req, res));
-
-/**
- * @swagger
- * /api/content/by-age/{age}:
- *   get:
- *     summary: Obtiene contenido por edad objetivo
- *     tags: [Content]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: age
- *         required: true
- *         schema:
- *           type: integer
- *           minimum: 0
- *         description: Edad del usuario
- *     responses:
- *       200:
- *         description: Lista de contenido apropiado para la edad especificada
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/Content'
- *       400:
- *         $ref: '#/components/responses/BadRequestError'
- *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
- *       500:
- *         $ref: '#/components/responses/InternalServerError'
- */
-router.get('/by-age/:age', (req, res) => contentController.getContentByAge(req, res));
-
 // ===== TOPICS ROUTES =====
-
 
 /**
  * @swagger
@@ -569,18 +504,16 @@ router.get('/by-age/:age', (req, res) => contentController.getContentByAge(req, 
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       $ref: '#/components/schemas/Topic'
+ *               $ref: '#/components/schemas/ApiResponse'
+ *               properties:
+ *                 data:
+ *                   $ref: '#/components/schemas/Topic'
  *       400:
  *         $ref: '#/components/responses/ValidationError'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.post('/topics', (req, res) => contentController.createTopic(req, res));
 
@@ -606,18 +539,16 @@ router.post('/topics', (req, res) => contentController.createTopic(req, res));
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       $ref: '#/components/schemas/Topic'
+ *               $ref: '#/components/schemas/ApiResponse'
+ *               properties:
+ *                 data:
+ *                   $ref: '#/components/schemas/Topic'
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.get('/topics/:id', (req, res) => contentController.getTopicById(req, res));
 
@@ -680,20 +611,18 @@ router.get('/topics/:id', (req, res) => contentController.getTopicById(req, res)
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       $ref: '#/components/schemas/Topic'
+ *               $ref: '#/components/schemas/ApiResponse'
+ *               properties:
+ *                 data:
+ *                   $ref: '#/components/schemas/Topic'
  *       400:
  *         $ref: '#/components/responses/ValidationError'
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.put('/topics/:id', (req, res) => contentController.updateTopic(req, res));
 
@@ -719,14 +648,13 @@ router.put('/topics/:id', (req, res) => contentController.updateTopic(req, res))
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.delete('/topics/:id', (req, res) => contentController.deleteTopic(req, res));
 
 // ===== TIPS ROUTES =====
-
 
 /**
  * @swagger
@@ -775,18 +703,16 @@ router.delete('/topics/:id', (req, res) => contentController.deleteTopic(req, re
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       $ref: '#/components/schemas/Tip'
+ *               $ref: '#/components/schemas/ApiResponse'
+ *               properties:
+ *                 data:
+ *                   $ref: '#/components/schemas/Tip'
  *       400:
  *         $ref: '#/components/responses/ValidationError'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.post('/tips', (req, res) => contentController.createTip(req, res));
 
@@ -812,18 +738,16 @@ router.post('/tips', (req, res) => contentController.createTip(req, res));
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       $ref: '#/components/schemas/Tip'
+ *               $ref: '#/components/schemas/ApiResponse'
+ *               properties:
+ *                 data:
+ *                   $ref: '#/components/schemas/Tip'
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.get('/tips/:id', (req, res) => contentController.getTipById(req, res));
 
@@ -874,20 +798,18 @@ router.get('/tips/:id', (req, res) => contentController.getTipById(req, res));
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       $ref: '#/components/schemas/Tip'
+ *               $ref: '#/components/schemas/ApiResponse'
+ *               properties:
+ *                 data:
+ *                   $ref: '#/components/schemas/Tip'
  *       400:
  *         $ref: '#/components/responses/ValidationError'
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.put('/tips/:id', (req, res) => contentController.updateTip(req, res));
 
@@ -913,9 +835,9 @@ router.put('/tips/:id', (req, res) => contentController.updateTip(req, res));
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.delete('/tips/:id', (req, res) => contentController.deleteTip(req, res));
 
@@ -1043,18 +965,16 @@ const validateProgress = (req: Request, res: Response, next: NextFunction) => {
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       $ref: '#/components/schemas/ContentProgress'
+ *               $ref: '#/components/schemas/ApiResponse'
+ *               properties:
+ *                 data:
+ *                   $ref: '#/components/schemas/ContentProgress'
  *       400:
  *         $ref: '#/components/responses/ValidationError'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.post('/track-progress', 
   jsonParser, 
@@ -1084,20 +1004,18 @@ router.post('/track-progress',
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/ContentProgress'
+ *               $ref: '#/components/schemas/ApiResponse'
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ContentProgress'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.get('/user-progress/:userId', (req, res) => contentController.getUserProgress(req, res));
 
@@ -1199,18 +1117,16 @@ router.get('/user-progress/:userId', (req, res) => contentController.getUserProg
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       $ref: '#/components/schemas/InteractionLog'
+ *               $ref: '#/components/schemas/ApiResponse'
+ *               properties:
+ *                 data:
+ *                   $ref: '#/components/schemas/InteractionLog'
  *       400:
  *         $ref: '#/components/responses/ValidationError'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.post('/track-interaction', jsonParser, validate(trackInteractionSchema), (req, res) => 
   contentController.trackInteraction(req, res)
@@ -1238,18 +1154,16 @@ router.post('/track-interaction', jsonParser, validate(trackInteractionSchema), 
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       $ref: '#/components/schemas/AbandonmentAnalytics'
+ *               $ref: '#/components/schemas/ApiResponse'
+ *               properties:
+ *                 data:
+ *                   $ref: '#/components/schemas/AbandonmentAnalytics'
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.get('/analytics/abandonment/:contentId', (req, res) => 
   contentController.getAbandonmentAnalytics(req, res)
@@ -1277,18 +1191,16 @@ router.get('/analytics/abandonment/:contentId', (req, res) =>
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       $ref: '#/components/schemas/EffectivenessAnalytics'
+ *               $ref: '#/components/schemas/ApiResponse'
+ *               properties:
+ *                 data:
+ *                   $ref: '#/components/schemas/EffectivenessAnalytics'
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.get('/analytics/effectiveness/:topicId', (req, res) => 
   contentController.getEffectivenessAnalytics(req, res)
@@ -1308,18 +1220,16 @@ router.get('/analytics/effectiveness/:topicId', (req, res) =>
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/ProblematicContent'
+ *               $ref: '#/components/schemas/ApiResponse'
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ProblematicContent'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.get('/analytics/problematic', (req, res) => 
   contentController.getProblematicContent(req, res)
