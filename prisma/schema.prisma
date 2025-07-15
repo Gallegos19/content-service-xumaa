@@ -189,21 +189,21 @@ model ContentProgress {
 }
 
 model Tip {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  content_id         String   @db.Uuid
-  title              String   @db.VarChar(200)
-  description        String?  @db.Text
+  id                 String    @id @default(uuid())
+  title              String
+  description        String?
   action_instructions String?
-  prerequisites      Json?    @default("[]")
-  related_tips       Json?    @default("[]")
-  metadata           Json?    @default("{}")
-  created_at         DateTime @default(now())
-  updated_at         DateTime @default(now())
+  prerequisites      Json?
+  related_tips       Json?
+  metadata           Json?
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
   deleted_at         DateTime?
   created_by         String?
   updated_by         String?
+  content_id         String
+  content            Content   @relation(fields: [content_id], references: [id])
   
-  content            Content  @relation("ContentToTips", fields: [content_id], references: [id])
   userTipsHistory    UserTipsHistory[]
   
   @@map("tips")

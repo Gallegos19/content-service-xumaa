@@ -11,8 +11,10 @@ import {
   ProblematicContent, 
   ContentInteractionLog,
   EffectivenessAnalytics,
+  Tip as DomainTip,
 } from '../entities/content.entity';
 import { Tip, Topic } from '@prisma/client';
+import { JsonValue } from '@prisma/client/runtime/library';
 
 type SimpleTip = {
   id: string;
@@ -66,14 +68,15 @@ export interface IContentRepository {
 
   // ===== TIP OPERATIONS =====\
   getAllTips(): Promise<SimpleTip[]>;
+  getTipsByContentId(contentId: string): Promise<Tip[]>;
   getTip(id: string): Promise<Tip>;
-  getTipById(id: string): Promise<Tip | null>;
-  createTip(contentId: string, data: Omit<Tip, 'id' | 'content_id' | 'created_at' | 'updated_at' | 'deleted_at'>): Promise<Tip>;
+  getTipById(id: string): Promise<DomainTip | null>;
+  createTip(contentId: string, data: Omit<DomainTip, 'id' | 'content_id' | 'created_at' | 'updated_at' | 'deleted_at'>): Promise<DomainTip>;
   updateTip(
     id: string, 
     data: Partial<Omit<Tip, 'id' | 'created_at' | 'updated_at' | 'deleted_at'>> 
-  ): Promise<Tip>;
-  deleteTip(id: string): Promise<boolean>;
+  ): Promise<Omit<Tip, 'metadata'> & { metadata?: JsonValue }>;
+  deleteTip(id: string): Promise<void>;
 
   // ===== ANALYTICS =====
   getContentAnalytics(contentId: string): Promise<ContentAnalytics>;

@@ -1,35 +1,30 @@
+import { Prisma } from '@prisma/client';
 import { Tip as PrismaTip } from '@prisma/client';
 import { Tip } from '../entities/content.entity';
 
 export class TipMapper {
-  static toDomain(prismaTip: PrismaTip): Tip {
-    const prerequisites = typeof prismaTip.prerequisites === 'string' ? 
-      JSON.parse(prismaTip.prerequisites) as string[] : 
-      (Array.isArray(prismaTip.prerequisites) ? prismaTip.prerequisites as string[] : []);
+  static toDomain(prismaTip: PrismaTip & { metadata?: any }): Tip {
+    const parseStringArray = (value: any): string[] => {
+      if (Array.isArray(value)) {
+        return value.filter(item => typeof item === 'string');
+      }
       
-    const relatedTips = typeof prismaTip.related_tips === 'string' ? 
-      JSON.parse(prismaTip.related_tips) as string[] : 
-      (Array.isArray(prismaTip.related_tips) ? prismaTip.related_tips as string[] : []);
+      try {
+        const parsed = typeof value === 'string' ? JSON.parse(value) : null;
+        return Array.isArray(parsed) 
+          ? parsed.filter(item => typeof item === 'string') 
+          : [];
+      } catch {
+        return [];
+      }
+    };
+    
+    const prerequisites = parseStringArray(prismaTip.prerequisites);
+    const relatedTips = parseStringArray(prismaTip.related_tips);
 
     return {
       id: prismaTip.id,
       title: prismaTip.title,
-      content: '', // Default empty content
-      tip_type: 'general', // Default type
-      category: null, // Default null category
-      target_age_min: 0, // Default min age
-      target_age_max: 100, // Default max age
-      difficulty_level: 'beginner', // Default difficulty
-      action_required: false, // Default false
-      estimated_time_minutes: null, // Default null
-      impact_level: 'medium', // Default medium impact
-      source_url: null, // Default null
-      image_url: null, // Default null
-      is_active: true, // Default active
-      is_featured: false, // Default not featured
-      valid_from: null, // Default null
-      valid_until: null, // Default null
-      usage_count: 0, // Default 0
       description: prismaTip.description || null,
       created_by: prismaTip.created_by || null,
       updated_by: prismaTip.updated_by || null,
@@ -37,7 +32,7 @@ export class TipMapper {
       action_instructions: prismaTip.action_instructions || null,
       prerequisites,
       related_tips: relatedTips,
-      metadata: null, // Default null
+      metadata: prismaTip.metadata || {},
       created_at: prismaTip.created_at,
       updated_at: prismaTip.updated_at,
       deleted_at: prismaTip.deleted_at
@@ -48,12 +43,13 @@ export class TipMapper {
     return {
       title: domainTip.title,
       description: domainTip.description || null,
+      action_instructions: domainTip.action_instructions || null,
+      prerequisites: domainTip.prerequisites,
+      related_tips: domainTip.related_tips,
+      content_id: domainTip.content_id,
       created_by: domainTip.created_by || null,
       updated_by: domainTip.updated_by || null,
-      content_id: domainTip.content_id,
-      action_instructions: domainTip.action_instructions || null,
-      prerequisites: JSON.stringify(domainTip.prerequisites || []),
-      related_tips: JSON.stringify(domainTip.related_tips || [])
+      metadata: domainTip.metadata || {},
     };
   }
 }

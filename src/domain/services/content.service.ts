@@ -580,28 +580,23 @@ export class ContentService {
     }
   }
 
-  async createTip(contentId: string, data: Omit<Tip, 'id' | 'created_at' | 'updated_at' | 'deleted_at'>): Promise<Tip> {
+  async createTip(contentId: string, tipData: Omit<Tip, 'id' | 'content_id' | 'created_at' | 'updated_at' | 'deleted_at'>): Promise<Tip> {
     try {
-      if (!data?.title?.trim()) {
-        throw new Error('Title is required');
-      }
-
-      // Create tip with required fields
-      const tipData: Tip = {
-        ...data,
-        id: uuidv4(),
-        created_at: new Date(),
-        updated_at: new Date(),
-        deleted_at: null,
-        content_id: contentId,
-        prerequisites: data.prerequisites || null,
-        related_tips: data.related_tips || null
+      // Ensure prerequisites and related_tips are properly formatted as arrays
+      const processedData = {
+        ...tipData,
+        prerequisites: Array.isArray(tipData.prerequisites) ? tipData.prerequisites : [],
+        related_tips: Array.isArray(tipData.related_tips) ? tipData.related_tips : [],
+        metadata: tipData.metadata || {}
       };
-
-      logger.info(`Creating tip: ${data.title}`);
-      return await this.contentRepository.createTip(contentId, tipData);
+      
+      const createdTip = await this.contentRepository.createTip(contentId, processedData);
+      return TipMapper.toDomain({
+        ...createdTip,
+        metadata: createdTip.metadata || {}
+      });
     } catch (error) {
-      logger.error('Error creating tip:', error);
+      logger.error(`Error creating tip for content ${contentId}:`, error);
       throw error;
     }
   }
@@ -613,57 +608,47 @@ export class ContentService {
       }
 
       logger.info(`Getting tip by id: ${id}`);
-      return await this.contentRepository.getTip(id);
+      const tip = await this.contentRepository.getTipById(id);
+      return tip ? TipMapper.toDomain(tip) : null;
     } catch (error) {
       logger.error(`Error getting tip by id ${id}:`, error);
       throw error;
     }
   }
 
-  async updateTip(id: string, data: Partial<Omit<Tip, 'id' | 'created_at' | 'updated_at' | 'deleted_at'>>): Promise<Tip> {
+  async updateTip(id: string, tipData: Partial<Tip>): Promise<Tip> {
     try {
-      if (!id?.trim()) {
-        throw new Error('ID is required');
-      }
-
-      if (!data || Object.keys(data).length === 0) {
-        throw new Error('Update data is required');
-      }
-
-      logger.info(`Updating tip: ${id}`);
-      
-      // Get existing tip first to ensure we have all required fields
-      const existingTip = await this.contentRepository.getTip(id);
-      if (!existingTip) {
-        throw new Error(`Tip with id ${id} not found`);
-      }
-      
-      // Ensure content_id is always defined
-      const updateData = {
-        ...data,
-        content_id: data.content_id ?? existingTip.content_id
+      // Ensure prerequisites and related_tips are properly formatted as arrays
+      const processedData = {
+        ...tipData,
+        prerequisites: Array.isArray(tipData.prerequisites) ? tipData.prerequisites : [],
+        related_tips: Array.isArray(tipData.related_tips) ? tipData.related_tips : [],
+        metadata: tipData.metadata || {}
       };
       
-      // Merge updates with existing tip
-      const updatedTip = {
-        ...existingTip,
-        ...updateData
-      };
-      
-      return await this.contentRepository.updateTip(id, updatedTip);
+      const updatedTip = await this.contentRepository.updateTip(id, processedData);
+      return TipMapper.toDomain({
+        ...updatedTip,
+        metadata: updatedTip.metadata || {}
+      });
     } catch (error) {
       logger.error(`Error updating tip ${id}:`, error);
       throw error;
     }
   }
 
+  async getTipsByContentId(contentId: string): Promise<Tip[]> {
+    try {
+      const tips = await this.contentRepository.getTipsByContentId(contentId);
+      return tips.map(tip => TipMapper.toDomain(tip));
+    } catch (error) {
+      logger.error(`Error getting tips for content ${contentId}:`, error);
+      throw error;
+    }
+  }
+
   async deleteTip(id: string): Promise<void> {
     try {
-      if (!id?.trim()) {
-        throw new Error('ID is required');
-      }
-
-      logger.info(`Deleting tip: ${id}`);
       await this.contentRepository.deleteTip(id);
     } catch (error) {
       logger.error(`Error deleting tip ${id}:`, error);

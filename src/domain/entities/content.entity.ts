@@ -169,18 +169,6 @@ export interface ContentInteractionLog {
 export interface Tip {
   id: string;
   title: string;
-  description: string | null;
-  created_by: string | null;
-  updated_by: string | null;
-  content_id: string;
-  action_instructions: string | null;
-  prerequisites: Prisma.JsonValue;
-  related_tips: Prisma.JsonValue;
-  created_at: Date;
-  updated_at: Date;
-  deleted_at: Date | null;
-  
-  // Optional fields with defaults
   content?: string;
   tip_type?: string;
   category?: string | null;
@@ -197,7 +185,17 @@ export interface Tip {
   valid_from?: Date | null;
   valid_until?: Date | null;
   usage_count?: number;
-  metadata?: Prisma.JsonValue | null;
+  description: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  content_id: string;
+  action_instructions: string | null;
+  prerequisites: string[];
+  related_tips: string[];
+  metadata: Prisma.JsonValue;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at: Date | null;
 }
 
 // User Tips History interface

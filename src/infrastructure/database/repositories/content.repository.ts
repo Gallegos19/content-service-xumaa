@@ -16,7 +16,8 @@ import {
   PlatformType, 
   AbandonmentReason,
   CameFromType,
-  ProgressStatus
+  ProgressStatus,
+  Tip as DomainTip
 } from '../../../domain/entities/content.entity';
 import { PaginatedResult, TYPES } from '@shared/constants/types';
 import { logger } from '@shared/utils/logger';
@@ -869,9 +870,21 @@ export class ContentRepository implements IContentRepository {
   }
 
   // ===== TIP OPERATIONS =====
-  async getAllTips(): Promise<Tip[]> {
+  async getAllTips(): Promise<DomainTip[]> {
     try {
-      return await this.prisma.tip.findMany();
+      const tips = await this.prisma.tip.findMany();
+      return tips.map(tip => ({
+        ...tip,
+        metadata: tip.metadata || {}, // Explicit default value
+        prerequisites: tip.prerequisites ? 
+          (typeof tip.prerequisites === 'string' ? 
+            JSON.parse(tip.prerequisites) : 
+            tip.prerequisites) as string[] : [],
+        related_tips: tip.related_tips ? 
+          (typeof tip.related_tips === 'string' ? 
+            JSON.parse(tip.related_tips) : 
+            tip.related_tips) as string[] : [],
+      }));
     } catch (error) {
       logger.error('Error finding all tips:', error);
       throw error;
@@ -880,120 +893,153 @@ export class ContentRepository implements IContentRepository {
 
   async getTip(id: string): Promise<Tip> {
     try {
-      const tip = await this.prisma.tip.findUnique({
-        where: { id },
+      const prismaTip = await this.prisma.tip.findUniqueOrThrow({ 
+        where: { id } 
       });
       
-      if (!tip) {
-        throw new Error(`Tip with id ${id} not found`);
-      }
-      
-      return TipMapper.toDomain(tip);
+      return {
+        ...prismaTip,
+        prerequisites: prismaTip.prerequisites ? 
+          (typeof prismaTip.prerequisites === 'string' ? 
+            JSON.parse(prismaTip.prerequisites) : 
+            prismaTip.prerequisites) as string[] : [],
+        related_tips: prismaTip.related_tips ? 
+          (typeof prismaTip.related_tips === 'string' ? 
+            JSON.parse(prismaTip.related_tips) : 
+            prismaTip.related_tips) as string[] : [],
+      };
     } catch (error) {
-      logger.error(`Error finding tip by id ${id}:`, error);
+      logger.error(`Error getting tip ${id}:`, error);
       throw error;
     }
   }
 
-  async getTipById(id: string): Promise<Tip | null> {
-    return this.getTip(id);
+  async getTipById(id: string): Promise<DomainTip | null> {
+    try {
+      const tip = await this.prisma.tip.findUnique({
+        where: { id },
+      });
+
+      if (!tip) return null;
+
+      return {
+        ...tip,
+        prerequisites: tip.prerequisites ? 
+          (typeof tip.prerequisites === 'string' ? 
+            JSON.parse(tip.prerequisites) : 
+            tip.prerequisites) as string[] : [],
+        related_tips: tip.related_tips ? 
+          (typeof tip.related_tips === 'string' ? 
+            JSON.parse(tip.related_tips) : 
+            tip.related_tips) as string[] : [],
+      };
+    } catch (error) {
+      logger.error(`Error finding tip with id ${id}:`, error);
+      throw error;
+    }
   }
 
-  async createTip(contentId: string, data: Omit<Tip, 'id' | 'content_id' | 'created_at' | 'updated_at' | 'deleted_at'>): Promise<Tip> {
+  async createTip(contentId: string, data: Omit<DomainTip, 'id' | 'content_id' | 'created_at' | 'updated_at' | 'deleted_at'>): Promise<DomainTip> {
     if (!contentId) {
       throw new Error('contentId is required');
     }
     try {
-      const tipData = {
-        id: crypto.randomUUID(),
-        content_id: contentId,
-        ...data,
-        prerequisites: data.prerequisites ? JSON.stringify(data.prerequisites) : Prisma.JsonNull,
-        related_tips: data.related_tips ? JSON.stringify(data.related_tips) : Prisma.JsonNull,
-        created_at: new Date(),
-        updated_at: new Date(),
-        deleted_at: null,
-        created_by: null,
-        updated_by: null
+      const createData: Prisma.TipCreateInput = {
+        title: data.title,
+        description: data.description,
+        action_instructions: data.action_instructions,
+        prerequisites: Array.isArray(data.prerequisites) ? data.prerequisites : [],
+        related_tips: Array.isArray(data.related_tips) ? data.related_tips : [],
+        metadata: data.metadata ?? {},
+        content: { connect: { id: contentId } },
+        created_by: data.created_by,
+        updated_by: data.updated_by
       };
-    
-      const result = await this.prisma.tip.create({ 
-        data: tipData 
-      });
-      return TipMapper.toDomain(result);
+
+      const tip = await this.prisma.tip.create({ data: createData });
+      return {
+        ...tip,
+        prerequisites: tip.prerequisites ? 
+          (typeof tip.prerequisites === 'string' ? 
+            JSON.parse(tip.prerequisites) : 
+            tip.prerequisites) as string[] : [],
+        related_tips: tip.related_tips ? 
+          (typeof tip.related_tips === 'string' ? 
+            JSON.parse(tip.related_tips) : 
+            tip.related_tips) as string[] : [],
+      };
     } catch (error) {
       logger.error(`Error creating tip:`, error);
       throw error;
     }
   }
 
-  async updateTip(id: string, data: Partial<Tip>): Promise<Tip> {
+  async updateTip(id: string, data: Partial<DomainTip>): Promise<DomainTip> {
     try {
-      // Validate required fields
-      if (data.title === undefined) {
-        throw new Error('Title is required for tip updates');
-      }
-      
-      // Create validated tip data with all required fields
-      const validatedTip: Tip = {
-        title: data.title,
-        description: data.description || null,
-        created_by: data.created_by || null,
-        updated_by: data.updated_by || null,
-        content_id: data.content_id || '',
-        action_instructions: data.action_instructions || null,
-        prerequisites: data.prerequisites || null,
-        related_tips: data.related_tips || null,
-        created_at: data.created_at || new Date(),
-        updated_at: data.updated_at || new Date(),
-        deleted_at: data.deleted_at || null,
-        id
-      };
-      
-      const prismaData = TipMapper.toPrisma(validatedTip);
-      
-      // Properly handle all Prisma update input types
       const updateData: Prisma.TipUpdateInput = {
-        title: { set: prismaData.title },
-        description: prismaData.description === null ? { set: null } : { set: prismaData.description },
-        content: { connect: { id: prismaData.content_id } },
-        action_instructions: prismaData.action_instructions === null ? { set: null } : { set: prismaData.action_instructions },
-        prerequisites: { set: prismaData.prerequisites },
-        related_tips: { set: prismaData.related_tips },
-        created_by: prismaData.created_by === null ? { set: null } : { set: prismaData.created_by },
-        updated_by: prismaData.updated_by === null ? { set: null } : { set: prismaData.updated_by }
+        title: data.title,
+        description: data.description,
+        action_instructions: data.action_instructions,
+        prerequisites: data.prerequisites,
+        related_tips: data.related_tips,
+        updated_by: data.updated_by,
+        updated_at: new Date()
       };
-      
-      const updatedTip = await this.prisma.tip.update({
+
+      const tip = await this.prisma.tip.update({
         where: { id },
         data: updateData
       });
-      
-      return TipMapper.toDomain(updatedTip);
+      return {
+        ...tip,
+        prerequisites: tip.prerequisites ? 
+          (typeof tip.prerequisites === 'string' ? 
+            JSON.parse(tip.prerequisites) : 
+            tip.prerequisites) as string[] : [],
+        related_tips: tip.related_tips ? 
+          (typeof tip.related_tips === 'string' ? 
+            JSON.parse(tip.related_tips) : 
+            tip.related_tips) as string[] : [],
+      };
     } catch (error) {
       logger.error(`Error updating tip with id ${id}:`, error);
       throw error;
     }
   }
 
-  async deleteTip(id: string): Promise<boolean> {
+  async deleteTip(id: string): Promise<void> {
     try {
-      await this.prisma.tip.delete({ where: { id } });
-      return true;
+      await this.prisma.tip.update({
+        where: { id },
+        data: { deleted_at: new Date() }
+      });
     } catch (error) {
       logger.error(`Error deleting tip ${id}:`, error);
       throw error;
     }
   }
 
-  async findTipsByContentId(contentId: string): Promise<Tip[]> {
+  async getTipsByContentId(contentId: string): Promise<Tip[]> {
     try {
-      return await this.prisma.tip.findMany({
+      const tips = await this.prisma.tip.findMany({
         where: { content_id: contentId },
         orderBy: { created_at: 'asc' }
       });
+      
+      return tips.map(tip => ({
+        ...tip,
+        metadata: tip.metadata || {}, // Add default value
+        prerequisites: tip.prerequisites ? 
+          (typeof tip.prerequisites === 'string' ? 
+            JSON.parse(tip.prerequisites) : 
+            tip.prerequisites) as string[] : [],
+        related_tips: tip.related_tips ? 
+          (typeof tip.related_tips === 'string' ? 
+            JSON.parse(tip.related_tips) : 
+            tip.related_tips) as string[] : [],
+      }));
     } catch (error) {
-      logger.error(`Error finding tips for content ${contentId}:`, error);
+      logger.error('Error finding tips by content id:', error);
       throw error;
     }
   }
