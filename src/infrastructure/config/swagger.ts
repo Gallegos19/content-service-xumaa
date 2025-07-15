@@ -2,7 +2,7 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import { version } from '../../../package.json';
 import env from '@shared/config/environment';
 
-const isProd = env.NODE_ENV === 'production';
+const isProd = env.NODE_ENV === 'development';
 
 const options: swaggerJsdoc.Options = {
   definition: {
@@ -60,9 +60,9 @@ const options: swaggerJsdoc.Options = {
   },
   apis: isProd
     ? [
-        './dist/infrastructure/web/**/*.routes.js',
-        './dist/infrastructure/web/**/*.controller.js',
-        './dist/domain/**/*.entity.js'
+        './dist/src/infrastructure/web/**/*.routes.js',
+        './dist/src/infrastructure/web/**/*.controller.js',
+        './dist/src/domain/**/*.entity.js'
       ]
     : [
         './src/infrastructure/web/**/*.routes.ts',
