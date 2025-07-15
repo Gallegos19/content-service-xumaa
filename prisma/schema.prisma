@@ -202,7 +202,7 @@ model Tip {
   created_by         String?
   updated_by         String?
   content_id         String
-  content            Content   @relation(fields: [content_id], references: [id])
+  content            Content   @relation("ContentToTips", fields: [content_id], references: [id])
   
   userTipsHistory    UserTipsHistory[]
   
