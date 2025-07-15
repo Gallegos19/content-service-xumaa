@@ -5,7 +5,7 @@ import { TYPES } from '@shared/constants/types';
 import { IContentRepository } from '../repositories/content.repository';
 import { logger } from '@shared/utils/logger';
 import { v4 as uuidv4 } from 'uuid';
-
+import { PaginatedResult } from '@shared/constants/types';
 import { 
   Content, 
   ContentWithTopics, 
@@ -34,6 +34,11 @@ type SimpleTip = {
   updated_at: Date;
   deleted_at: Date | null;
 };
+
+export interface ContentService {
+  // ... otros métodos existentes ...
+  getContentByTopicId(topicId: string, page?: number, limit?: number): Promise<PaginatedResult<ContentWithTopics>>;
+}
 
 @injectable()
 export class ContentService {
@@ -228,6 +233,21 @@ export class ContentService {
         ...c,
         contentTopics: c.contentTopics || [],
       }));
+    } catch (error) {
+      logger.error(`Error finding content by topic ID ${topicId}:`, error);
+      throw error;
+    }
+  }
+
+  async getContentByTopicId(topicId: string, page: number = 1, limit: number = 10): Promise<PaginatedResult<ContentWithTopics>> {
+    try {
+      if (!topicId?.trim()) {
+        throw new Error('ID del tema es requerido');
+      }
+
+      logger.info(`Finding content by topic ID: ${topicId}`);
+      console.log(topicId, page, limit);
+      return await this.contentRepository.getContentByTopicId(topicId, page, limit);
     } catch (error) {
       logger.error(`Error finding content by topic ID ${topicId}:`, error);
       throw error;

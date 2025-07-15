@@ -513,15 +513,20 @@ export class ContentController {
    */
   public getContentByTopicId = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { topic_id } = req.params;
-      const content = await this.contentService.findByTopicId(topic_id);
-      return res.status(StatusCodes.OK).json({
+      const { id } = req.params;
+      const page = req.query.page ? Number(req.query.page) : 1 ;
+      const limit = req.query.limit ? Number(req.query.limit) : 10; 
+
+      const result = await this.contentService.getContentByTopicId(id, page, limit);
+      console.log(result);
+      return res.status(200).json({
         status: 'success',
-        data: content
+        data: result.items,
+        meta: result.meta
       });
     } catch (error) {
-      logger.error(error);
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      logger.error(`Error getting content by topic: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return res.status(500).json({
         status: 'error',
         message: 'Error al obtener contenido por topic_id'
       });

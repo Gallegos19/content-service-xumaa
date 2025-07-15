@@ -872,10 +872,25 @@ export class ContentRepository implements IContentRepository {
   // ===== TIP OPERATIONS =====
   async getAllTips(): Promise<DomainTip[]> {
     try {
-      const tips = await this.prisma.tip.findMany();
+      const tips = await this.prisma.tip.findMany({
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          action_instructions: true,
+          prerequisites: true,
+          related_tips: true,
+          created_at: true,
+          updated_at: true,
+          deleted_at: true,
+          created_by: true,
+          updated_by: true,
+          content_id: true
+        }
+      });
       return tips.map(tip => ({
         ...tip,
-        metadata: tip.metadata || {}, // Explicit default value
+        metadata: {},
         prerequisites: tip.prerequisites ? 
           (typeof tip.prerequisites === 'string' ? 
             JSON.parse(tip.prerequisites) : 
@@ -1170,6 +1185,56 @@ export class ContentRepository implements IContentRepository {
     } catch (error) {
       logger.error('Error bulk logging interactions:', error);
       throw error;
+    }
+  }
+
+  async getContentByTopicId(topicId: string, page: number = 1, limit: number = 10): Promise<PaginatedResult<ContentWithTopics>> {
+    try {
+      const skip = (page - 1) * limit;
+      
+      const [contents, total] = await Promise.all([
+        this.prisma.content.findMany({
+          where: { 
+            OR: [
+              { topic_id: topicId },
+              { contentTopics: { some: { topic_id: topicId } } }
+            ]
+          },
+          include: {
+            contentTopics: true,
+            primaryTopic: true
+          },
+          skip,
+          take: limit
+        }),
+        this.prisma.content.count({
+          where: { 
+            OR: [
+              { topic_id: topicId },
+              { contentTopics: { some: { topic_id: topicId } } }
+            ]
+          }
+        })
+      ]);
+      console.log(contents);
+
+      return {
+        items: contents.map(content => ({
+          ...content,
+          contentTopics: content.contentTopics || [],
+          metadata: content.metadata ? JSON.parse(JSON.stringify(content.metadata)) : {}
+        })),
+        meta: {
+          totalItems: total,
+          itemCount: contents.length,
+          itemsPerPage: limit,
+          totalPages: Math.ceil(total / limit),
+          currentPage: page
+        }
+      };
+    } catch (error) {
+      logger.error(`Error getting content by topic ${topicId}:`, error);
+      throw new Error('Error al obtener contenido por topic_id');
     }
   }
 

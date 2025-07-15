@@ -11,6 +11,8 @@ import {
 import { TYPES } from '../../../../shared/constants/types';
 import { ContentController } from '@infrastructure/web/content/controllers/content.controller';
 import { NextFunction, Request, Response } from 'express';
+import Joi from 'joi';
+import { validateRequest } from '../../../../shared/middlewares/requestValidator';
 
 const router = Router();
 const contentController = container.get<ContentController>(TYPES.ContentController);
@@ -1233,6 +1235,59 @@ router.get('/analytics/effectiveness/:topicId', (req, res) =>
  */
 router.get('/analytics/problematic', (req, res) => 
   contentController.getProblematicContent(req, res)
+);
+
+/**
+ * @swagger
+ * /api/content/by-topic/{id}:
+ *   get:
+ *     tags: [Content]
+ *     summary: Obtiene contenido paginado por ID de tema
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         required: true
+ *         description: ID del tema
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         required: false
+ *         description: Número de página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         required: false
+ *         description: Límite de items por página
+ *     responses:
+ *       200:
+ *         description: Lista de contenido paginado filtrado por tema
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponse'
+ */
+router.get(
+  '/by-topic/:topic_id',
+  validateRequest({
+    params: Joi.object({
+      topic_id: Joi.string().uuid().required()
+    }),
+    query: Joi.object({
+      page: Joi.number().integer().min(1).default(1), 
+      limit: Joi.number().integer().min(1).max(100).default(10)
+    })
+  }),
+  (req, res) => contentController.getContentByTopicId(req, res)
 );
 
 export { router as contentRouter };

@@ -63,6 +63,8 @@ typings/
 # Optional npm cache directory
 .npm
 
+backup.sql
+
 # Optional eslint cache
 .eslintcache
 

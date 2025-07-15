@@ -48,6 +48,57 @@ const options: swaggerJsdoc.Options = {
       }
     ],
     components: {
+      schemas: {
+        Content: {
+          type: 'object',
+          required: ['title', 'content_type', 'main_media_id', 'thumbnail_media_id'],
+          properties: {
+            id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'ID único del contenido'
+            },
+            title: {
+              type: 'string',
+              description: 'Título del contenido'
+            },
+            description: {
+              type: 'string',
+              nullable: true,
+              description: 'Descripción detallada del contenido'
+            },
+            content_type: {
+              type: 'string',
+              enum: ['VIDEO', 'ARTICLE', 'QUIZ', 'INTERACTIVE', 'OTHER'],
+              description: 'Tipo de contenido'
+            },
+            main_media_id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'ID del recurso multimedia principal'
+            },
+            thumbnail_media_id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'ID del recurso multimedia para miniatura'
+            },
+            tags: {
+              type: 'array',
+              items: {
+                type: 'string'
+              },
+              nullable: true,
+              description: 'Etiquetas asociadas al contenido'
+            },
+            metadata: {
+              type: 'object',
+              additionalProperties: true,
+              nullable: true,
+              description: 'Metadatos adicionales del contenido'
+            }
+          }
+        }
+      },
       securitySchemes: {
         bearerAuth: {
           type: 'http',

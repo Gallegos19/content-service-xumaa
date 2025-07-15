@@ -106,4 +106,6 @@ export interface IContentRepository {
   }>): Promise<void>;
   
   bulkLogInteractions(interactions: Array<Omit<ContentInteractionLog, 'id' | 'actionTimestamp'>>): Promise<void>;
+
+  getContentByTopicId(topicId: string, page: number, limit: number): Promise<PaginatedResult<ContentWithTopics>>;
 }
