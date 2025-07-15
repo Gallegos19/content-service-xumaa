@@ -100,14 +100,16 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // ===== DOCUMENTATION =====
-if (env.NODE_ENV !== 'production') {
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
-    explorer: true,
-    customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'Content Service API Documentation'
-  }));
-  logger.info(`📚 API Docs available at /api-docs`);
-}
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  explorer: true,
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Content Service API Documentation',
+  swaggerOptions: {
+    persistAuthorization: true,
+    tryItOutEnabled: true
+  }
+}));
+logger.info(`📚 API Docs available at /api-docs`);
 
 // ===== HEALTH CHECK ENDPOINTS =====
 app.get('/health', async (_req: Request, res: Response) => {
