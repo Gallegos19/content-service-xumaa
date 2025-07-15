@@ -8,7 +8,7 @@ WORKDIR /app
 
 # 2. Instalar dependencias de Node
 COPY package.json package-lock.json* ./
-RUN npm ci
+RUN npm ci --include=dev
 
 # 3. Configurar Prisma
 COPY prisma ./prisma/
