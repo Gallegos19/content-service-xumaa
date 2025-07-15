@@ -18,7 +18,7 @@ RUN npx prisma generate
 COPY . .
 
 # 5. Build project
-RUN npm run build
+RUN npm run build || (echo "BUILD FAILED" && find src -name "*.ts" | xargs ls -la && exit 1)
 
 # Stage 2: Runtime
 FROM node:18-alpine
