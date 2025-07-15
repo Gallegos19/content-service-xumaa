@@ -1,7 +1,7 @@
 # Stage 1: Builder
 FROM node:18-alpine AS builder
 
-RUN apk add --no-cache openssl1.1-compat python3 make g++ git libc6-compat
+RUN apk add --no-cache openssl python3 make g++ git libc6-compat
 
 WORKDIR /app
 
@@ -20,7 +20,7 @@ RUN npm run build
 # Stage 2: Runtime
 FROM node:18-alpine
 
-RUN apk add --no-cache openssl1.1-compat
+RUN apk add --no-cache openssl
 
 WORKDIR /app
 ENV NODE_ENV=production
