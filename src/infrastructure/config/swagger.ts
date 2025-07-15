@@ -2,6 +2,8 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import { version } from '../../../package.json';
 import env from '@shared/config/environment';
 
+const isProd = env.NODE_ENV === 'production';
+
 const options: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
@@ -41,7 +43,6 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        
         url: 'http://localhost:3004/',
         description: env.NODE_ENV === 'production' ? 'Production server' : 'Development server'
       }
@@ -55,15 +56,19 @@ const options: swaggerJsdoc.Options = {
         }
       }
     },
-    security: [{
-      bearerAuth: []
-    }]
+    security: [{ bearerAuth: [] }]
   },
-  apis: [
-    './src/infrastructure/web/**/*.routes.ts',
-    './src/infrastructure/web/**/*.controller.ts',
-    './src/domain/**/*.entity.ts'
-  ]
+  apis: isProd
+    ? [
+        './dist/infrastructure/web/**/*.routes.js',
+        './dist/infrastructure/web/**/*.controller.js',
+        './dist/domain/**/*.entity.js'
+      ]
+    : [
+        './src/infrastructure/web/**/*.routes.ts',
+        './src/infrastructure/web/**/*.controller.ts',
+        './src/domain/**/*.entity.ts'
+      ]
 };
 
 const specs = swaggerJsdoc(options);
