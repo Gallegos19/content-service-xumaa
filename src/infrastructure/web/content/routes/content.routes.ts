@@ -24,27 +24,44 @@ const jsonParser = bodyParser.json();
  * /api/content/all-tips:
  *   get:
  *     summary: Obtiene todos los tips
+ *     description: Retorna una lista paginada de todos los tips disponibles
  *     tags: [Tips]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número de página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Límite de items por página
  *     responses:
  *       200:
- *         description: Lista de tips obtenida exitosamente
+ *         description: Lista de tips
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/Tip'
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Tip'
+ *                 meta:
+ *                   $ref: '#/components/schemas/PaginationMeta'
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         $ref: '#/components/responses/ServerError'
  */
 router.get('/all-tips', (req, res) => contentController.getAllTips(req, res));
 
