@@ -1,5 +1,6 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 import { version } from '../../../package.json';
+import env from '@shared/config/environment';
 
 const options: swaggerJsdoc.Options = {
   definition: {
@@ -40,7 +41,8 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: env.API_BASE_URL || 'http://localhost:3004',
+        
+        url: 'http://localhost:3004/',
         description: env.NODE_ENV === 'production' ? 'Production server' : 'Development server'
       }
     ],
