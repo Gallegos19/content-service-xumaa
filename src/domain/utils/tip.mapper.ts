@@ -28,7 +28,7 @@ export class TipMapper {
       description: prismaTip.description || null,
       created_by: prismaTip.created_by || null,
       updated_by: prismaTip.updated_by || null,
-      content_id: prismaTip.content_id,
+      content_id: prismaTip.content_id || '',
       action_instructions: prismaTip.action_instructions || null,
       prerequisites,
       related_tips: relatedTips,

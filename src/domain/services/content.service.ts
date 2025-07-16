@@ -600,17 +600,17 @@ export class ContentService {
     }
   }
 
-  async createTip(contentId: string, tipData: Omit<Tip, 'id' | 'content_id' | 'created_at' | 'updated_at' | 'deleted_at'>): Promise<Tip> {
+  async createTip(tipData: Omit<Tip, 'id' | 'content_id' | 'created_at' | 'updated_at' | 'deleted_at'>, contentId?: string): Promise<Tip> {
     try {
       // Ensure prerequisites and related_tips are properly formatted as arrays
       const processedData = {
         ...tipData,
-        prerequisites: Array.isArray(tipData.prerequisites) ? tipData.prerequisites : [],
-        related_tips: Array.isArray(tipData.related_tips) ? tipData.related_tips : [],
+        prerequisites: tipData.prerequisites ? (Array.isArray(tipData.prerequisites) ? tipData.prerequisites : []) : [],
+        related_tips: tipData.related_tips ? (Array.isArray(tipData.related_tips) ? tipData.related_tips : []) : [],
         metadata: tipData.metadata || {}
       };
       
-      const createdTip = await this.contentRepository.createTip(contentId, processedData);
+      const createdTip = await this.contentRepository.createTip( processedData, contentId);
       return TipMapper.toDomain({
         ...createdTip,
         metadata: createdTip.metadata || {}

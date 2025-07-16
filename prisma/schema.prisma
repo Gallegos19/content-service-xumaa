@@ -190,7 +190,7 @@ model ContentProgress {
 }
 
 model Tip {
-  id                 String    @id @default(uuid())
+  id                 String    @id @default(uuid()) @db.Uuid
   title              String
   description        String?
   action_instructions String?
@@ -202,8 +202,8 @@ model Tip {
   deleted_at         DateTime?
   created_by         String?
   updated_by         String?
-  content_id         String
-  content            Content   @relation("ContentToTips", fields: [content_id], references: [id])
+  content_id         String?   @db.Uuid
+  content            Content?   @relation("ContentToTips", fields: [content_id], references: [id])
   
   userTipsHistory    UserTipsHistory[]
   
@@ -223,6 +223,7 @@ model UserTipsHistory {
 
   tip Tip @relation(fields: [tip_id], references: [id])
 }
+
 
 model ContentInteractionLog {
   id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid

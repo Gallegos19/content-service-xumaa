@@ -282,29 +282,37 @@ export class ContentController {
   };
 
   /**
-   * Crea un nuevo tip (stub implementation)
+   * Crea un nuevo tip
    */
-  public createTip = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
+  public createTip = async (req: Request, res: Response): Promise<Response> => {
     try {
       const body = req.body;
-      const tip = await this.contentService.createTip(body.content_id || req.params.contentId, body);
-      if (!tip) {
+      
+      // Validar campos requeridos
+      if (!body.title || !body.content || !body.tip_type) {
         return res.status(StatusCodes.BAD_REQUEST).json({
           status: 'error',
-          message: 'Error creating tip',
+          message: 'Title, content and tip_type are required'
         });
       }
+
+      const tipData = {
+        ...body,
+        metadata: body.metadata || {}
+      };
+
+      const createdTip = await this.contentService.createTip(tipData);
       return res.status(StatusCodes.CREATED).json({
         status: 'success',
-        data: tip,
+        data: createdTip
       });
-    } catch (error) {
+    } catch (error: unknown) {
       const response: ErrorResponse = {
         status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error creating tip'
       };
-      logger.error('Error creating tip:', error);
-      return res.status(500).json(response);
+      logger.error(`Error creating tip: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(response);
     }
   };
 
@@ -513,11 +521,11 @@ export class ContentController {
    */
   public getContentByTopicId = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { id } = req.params;
+      const { topic_id } = req.params;
       const page = req.query.page ? Number(req.query.page) : 1 ;
       const limit = req.query.limit ? Number(req.query.limit) : 10; 
-
-      const result = await this.contentService.getContentByTopicId(id, page, limit);
+      logger.info(`Getting content by topic ${topic_id}`);
+      const result = await this.contentService.getContentByTopicId(topic_id, page, limit);
       console.log(result);
       return res.status(200).json({
         status: 'success',

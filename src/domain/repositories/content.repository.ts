@@ -71,7 +71,7 @@ export interface IContentRepository {
   getTipsByContentId(contentId: string): Promise<Tip[]>;
   getTip(id: string): Promise<Tip>;
   getTipById(id: string): Promise<DomainTip | null>;
-  createTip(contentId: string, data: Omit<DomainTip, 'id' | 'content_id' | 'created_at' | 'updated_at' | 'deleted_at'>): Promise<DomainTip>;
+  createTip(data: Omit<DomainTip, 'id' | 'content_id' | 'created_at' | 'updated_at' | 'deleted_at'>, contentId?: string): Promise<DomainTip>;
   updateTip(
     id: string, 
     data: Partial<Omit<Tip, 'id' | 'created_at' | 'updated_at' | 'deleted_at'>> 

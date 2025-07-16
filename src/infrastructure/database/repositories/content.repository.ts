@@ -885,12 +885,13 @@ export class ContentRepository implements IContentRepository {
           deleted_at: true,
           created_by: true,
           updated_by: true,
-          content_id: true
+          content_id: true,
         }
       });
       return tips.map(tip => ({
         ...tip,
         metadata: {},
+        content_id: tip.content_id || '',
         prerequisites: tip.prerequisites ? 
           (typeof tip.prerequisites === 'string' ? 
             JSON.parse(tip.prerequisites) : 
@@ -939,6 +940,7 @@ export class ContentRepository implements IContentRepository {
 
       return {
         ...tip,
+        content_id: tip.content_id || '',
         prerequisites: tip.prerequisites ? 
           (typeof tip.prerequisites === 'string' ? 
             JSON.parse(tip.prerequisites) : 
@@ -954,26 +956,27 @@ export class ContentRepository implements IContentRepository {
     }
   }
 
-  async createTip(contentId: string, data: Omit<DomainTip, 'id' | 'content_id' | 'created_at' | 'updated_at' | 'deleted_at'>): Promise<DomainTip> {
-    if (!contentId) {
-      throw new Error('contentId is required');
-    }
+  async createTip(data: Omit<DomainTip  , 'id' | 'content_id' | 'created_at' | 'updated_at' | 'deleted_at'>, contentId?: string | undefined): Promise<DomainTip> {
     try {
       const createData: Prisma.TipCreateInput = {
         title: data.title,
         description: data.description,
         action_instructions: data.action_instructions,
-        prerequisites: Array.isArray(data.prerequisites) ? data.prerequisites : [],
-        related_tips: Array.isArray(data.related_tips) ? data.related_tips : [],
+        prerequisites: data.prerequisites ? (Array.isArray(data.prerequisites) ? data.prerequisites : []) : [],
+        related_tips: data.related_tips ? (Array.isArray(data.related_tips) ? data.related_tips : []) : [],
         metadata: data.metadata ?? {},
-        content: { connect: { id: contentId } },
         created_by: data.created_by,
-        updated_by: data.updated_by
+        updated_by: data.updated_by,
       };
+      
+      if (contentId) {
+        createData.content = { connect: { id: contentId } };
+      }
 
       const tip = await this.prisma.tip.create({ data: createData });
       return {
         ...tip,
+        content_id: tip.content_id || '',
         prerequisites: tip.prerequisites ? 
           (typeof tip.prerequisites === 'string' ? 
             JSON.parse(tip.prerequisites) : 
@@ -1007,6 +1010,7 @@ export class ContentRepository implements IContentRepository {
       });
       return {
         ...tip,
+        content_id: tip.content_id || '',
         prerequisites: tip.prerequisites ? 
           (typeof tip.prerequisites === 'string' ? 
             JSON.parse(tip.prerequisites) : 
@@ -1190,6 +1194,7 @@ export class ContentRepository implements IContentRepository {
 
   async getContentByTopicId(topicId: string, page: number = 1, limit: number = 10): Promise<PaginatedResult<ContentWithTopics>> {
     try {
+      logger.info(`Getting content by topic ${topicId}`);
       const skip = (page - 1) * limit;
       
       const [contents, total] = await Promise.all([
@@ -1216,7 +1221,6 @@ export class ContentRepository implements IContentRepository {
           }
         })
       ]);
-      console.log(contents);
 
       return {
         items: contents.map(content => ({
