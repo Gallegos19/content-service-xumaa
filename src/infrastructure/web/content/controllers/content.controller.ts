@@ -5,10 +5,10 @@ import * as StatusCodes from 'http-status-codes';
 import { inject, injectable } from 'inversify';
 import { ContentService } from '@domain/services/content.service';
 import { TYPES } from '../../../../shared/constants/types';
-import { 
-  InteractionAction, 
-  DeviceType, 
-  PlatformType, 
+import {
+  InteractionAction,
+  DeviceType,
+  PlatformType,
   AbandonmentReason,
   CameFromType,
   ContentType,
@@ -45,7 +45,7 @@ interface CreateContentDto {
   topic_ids?: string[];
 }
 
-interface UpdateContentDto extends Partial<CreateContentDto> {}
+interface UpdateContentDto extends Partial<CreateContentDto> { }
 
 interface TrackProgressDto {
   userId: string;
@@ -88,7 +88,7 @@ export interface AuthenticatedRequest extends Request {
 export class ContentController {
   constructor(
     @inject(TYPES.ContentService) private readonly contentService: ContentService,
-  ) {}
+  ) { }
 
   /**
    * Obtiene todos los módulos de contenido
@@ -199,17 +199,17 @@ export class ContentController {
   public updateContent = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
-      
+
       if (!id) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ 
-          status: 'error', 
-          message: 'ID del contenido es requerido' 
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          status: 'error',
+          message: 'ID del contenido es requerido'
         });
       }
-      
+
       try {
         const validatedData = updateContentSchema.parse(req.body);
-        
+
         const result = await this.contentService.updateContent(
           id,
           {
@@ -217,7 +217,7 @@ export class ContentController {
             updated_by: req.user?.id || null
           }
         );
-        
+
         return res.status(StatusCodes.OK).json({
           status: 'success',
           data: result
@@ -245,8 +245,15 @@ export class ContentController {
    * Elimina un contenido
    */
   public deleteContent = async (req: Request, res: Response): Promise<Response> => {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        status: 'error',
+        message: 'ID del contenido es requerido'
+      });
+    }
     try {
-      await this.contentService.deleteContent(req.params.id);
+      await this.contentService.deleteContent(id);
       return res.status(StatusCodes.NO_CONTENT).json({
         status: 'success'
       });
@@ -266,7 +273,7 @@ export class ContentController {
   public getAllTips = async (_req: Request, res: Response): Promise<Response> => {
     try {
       const tips = await this.contentService.getAllTips();
-      
+
       return res.status(StatusCodes.OK).json({
         status: 'success',
         data: tips,
@@ -364,27 +371,46 @@ export class ContentController {
   public deleteTip = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
+      if (!id) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          status: 'error',
+          message: 'ID del tip es requerido'
+        });
+      }
       const result = await this.contentService.deleteTip(id);
-      return res.status(StatusCodes.OK).json({
-        status: 'success',
-        data: result,
-      });
-    } catch (error: unknown) {
-      const response: ErrorResponse = {
+      logger.info(`Tip eliminado correctamente: ${result}`);
+      if (result) {
+        return res.status(StatusCodes.OK).json({
+          status: 'success',
+          data: 'Tip eliminado correctamente',
+        });
+      }
+      // Si no se eliminó nada (no encontrado, etc.)
+      return res.status(StatusCodes.NOT_FOUND).json({
         status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      };
-      logger.error(`Error al eliminar tip ${req.params.id}: ${error instanceof Error ? error.message : 'Error desconocido'}`);
-      return res.status(500).json(response);
-    }
+        message: 'No se encontró el tip a eliminar',
+      });
+    } catch (error) {
+      // Si ocurre un error inesperado
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        status: 'error',
+        message: 'Ocurrió un error al eliminar el tip',
+        error: error instanceof Error ? error.message : error,
+      });
+    };
   };
-
   /**
    * Obtiene todos los temas (stub implementation)
    */
   public getAllTopics = async (_req: Request, res: Response): Promise<Response> => {
     try {
       const topics = await this.contentService.getAllTopics();
+      if (!topics) {
+        return res.status(StatusCodes.NOT_FOUND).json({
+          status: 'error',
+          message: 'No se encontraron temas'
+        });
+      }
       return res.status(StatusCodes.OK).json({
         status: 'success',
         data: topics
@@ -394,8 +420,7 @@ export class ContentController {
         status: 'error',
         message: error instanceof Error ? error.message : 'Unknown error'
       };
-      logger.error(`Error al obtener temas: ${error instanceof Error ? error.message : 'Error desconocido'}`);
-      return res.status(500).json(response);
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(response);
     }
   };
 
@@ -427,7 +452,7 @@ export class ContentController {
   public getTopicById = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
-      
+
       const topic = await this.contentService.getTopicById(id);
       return res.status(StatusCodes.OK).json({
         status: 'success',
@@ -493,7 +518,7 @@ export class ContentController {
     try {
       const { moduleId } = req.params;
       const module = await this.contentService.findModuleById(moduleId);
-      
+
       if (!module) {
         const response: ErrorResponse = {
           status: 'error',
@@ -501,7 +526,7 @@ export class ContentController {
         };
         return res.status(404).json(response);
       }
-      
+
       return res.status(StatusCodes.OK).json({
         status: 'success',
         data: module,
@@ -522,8 +547,8 @@ export class ContentController {
   public getContentByTopicId = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { topic_id } = req.params;
-      const page = req.query.page ? Number(req.query.page) : 1 ;
-      const limit = req.query.limit ? Number(req.query.limit) : 10; 
+      const page = req.query.page ? Number(req.query.page) : 1;
+      const limit = req.query.limit ? Number(req.query.limit) : 10;
       logger.info(`Getting content by topic ${topic_id}`);
       const result = await this.contentService.getContentByTopicId(topic_id, page, limit);
       console.log(result);
@@ -548,7 +573,7 @@ export class ContentController {
     try {
       const { age } = req.params;
       const ageNum = parseInt(age, 10);
-      
+
       if (isNaN(ageNum) || ageNum < 0) {
         const response: ErrorResponse = {
           status: 'error',
@@ -556,9 +581,9 @@ export class ContentController {
         };
         return res.status(400).json(response);
       }
-      
+
       const content = await this.contentService.findContentByAge(ageNum);
-      
+
       return res.status(StatusCodes.OK).json({
         status: 'success',
         data: content,
@@ -579,9 +604,9 @@ export class ContentController {
   public trackProgress = async (req: Request, res: Response): Promise<Response> => {
     try {
       if (!req.is('application/json')) {
-        
+
         return res.status(StatusCodes.BAD_REQUEST).json({
-          status: 'error', 
+          status: 'error',
           message: 'Content-Type must be application/json'
         });
       }
@@ -622,7 +647,7 @@ export class ContentController {
         completionRating,
         completionFeedback
       };
-      
+
       const result = await this.contentService.trackUserProgress(progressData);
       if (!result) {
         return res.status(StatusCodes.BAD_REQUEST).json({
@@ -630,7 +655,7 @@ export class ContentController {
           message: 'Failed to track progress'
         });
       }
-      
+
       return res.status(StatusCodes.OK).json({
         status: 'success',
         data: result
@@ -651,7 +676,7 @@ export class ContentController {
     try {
       const { userId } = req.params;
       const progress = await this.contentService.getUserProgress(userId);
-      
+
       return res.status(StatusCodes.OK).json({
         status: 'success',
         data: progress,
@@ -672,7 +697,7 @@ export class ContentController {
   public trackInteraction = async (req: Request, res: Response): Promise<Response> => {
     try {
       const interactionData: TrackInteractionDto = req.body;
-      
+
       // Validate required fields
       if (!interactionData.userId || !interactionData.contentId || !interactionData.action) {
         return res.status(StatusCodes.BAD_REQUEST).json({
@@ -694,7 +719,7 @@ export class ContentController {
         abandonmentReason: interactionData.abandonmentReason,
         metadata: interactionData.metadata
       });
-      
+
       return res.status(StatusCodes.CREATED).json({
         status: 'success',
         data: interaction,
@@ -716,7 +741,7 @@ export class ContentController {
     try {
       const { contentId } = req.params;
       const analytics = await this.contentService.getAbandonmentAnalytics(contentId);
-      
+
       return res.status(StatusCodes.OK).json({
         status: 'success',
         data: analytics,
@@ -738,7 +763,7 @@ export class ContentController {
     try {
       const { topicId } = req.params;
       const analytics = await this.contentService.getEffectivenessAnalytics(topicId);
-      
+
       return res.status(StatusCodes.OK).json({
         status: 'success',
         data: analytics,
@@ -759,7 +784,7 @@ export class ContentController {
   public getProblematicContent = async (_req: Request, res: Response): Promise<Response> => {
     try {
       const problematicContent = await this.contentService.findProblematicContent();
-      
+
       return res.status(StatusCodes.OK).json({
         status: 'success',
         data: problematicContent,
@@ -781,7 +806,7 @@ export class ContentController {
     try {
       const { topicId } = req.params;
       const content = await this.contentService.findByTopicId(topicId);
-      
+
       return res.status(StatusCodes.OK).json({
         status: 'success',
         data: content,

@@ -1026,15 +1026,17 @@ export class ContentRepository implements IContentRepository {
     }
   }
 
-  async deleteTip(id: string): Promise<void> {
+  async deleteTip(id: string): Promise<boolean> {
     try {
-      await this.prisma.tip.update({
+      logger.info(`Deleting tip ${id}`);
+      const result = await this.prisma.tip.delete({
         where: { id },
-        data: { deleted_at: new Date() }
       });
+      if (!result) return false;
+      return true;
     } catch (error) {
       logger.error(`Error deleting tip ${id}:`, error);
-      throw error;
+      return false;
     }
   }
 

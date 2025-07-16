@@ -667,9 +667,9 @@ export class ContentService {
     }
   }
 
-  async deleteTip(id: string): Promise<void> {
+  async deleteTip(id: string): Promise<boolean> {
     try {
-      await this.contentRepository.deleteTip(id);
+      return await this.contentRepository.deleteTip(id);
     } catch (error) {
       logger.error(`Error deleting tip ${id}:`, error);
       throw error;

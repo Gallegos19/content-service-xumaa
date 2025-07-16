@@ -76,7 +76,7 @@ export interface IContentRepository {
     id: string, 
     data: Partial<Omit<Tip, 'id' | 'created_at' | 'updated_at' | 'deleted_at'>> 
   ): Promise<Omit<Tip, 'metadata'> & { metadata?: JsonValue }>;
-  deleteTip(id: string): Promise<void>;
+  deleteTip(id: string): Promise<boolean>;
 
   // ===== ANALYTICS =====
   getContentAnalytics(contentId: string): Promise<ContentAnalytics>;
