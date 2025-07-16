@@ -9,9 +9,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./ 
 
 # Instalación más robusta con fallback a npm install
-RUN npm cache clean --force \
-    && npm install -g npm@latest \
-    && (npm ci --no-audit --prefer-offline || npm install --no-audit --prefer-offline)
+RUN npm ci --no-audit --prefer-offline || npm install --no-audit --prefer-offline
+
 
 # Copiar el resto de los archivos
 COPY prisma ./prisma/
