@@ -287,12 +287,12 @@ export class ContentController {
   public createTip = async (req: Request, res: Response): Promise<Response> => {
     try {
       const body = req.body;
-      
+      console.log(`Creating tip: ${JSON.stringify(body)}`);
       // Validar campos requeridos
-      if (!body.title || !body.content || !body.tip_type) {
+      if (!body.title || !body.description || !body.tip_type) {
         return res.status(StatusCodes.BAD_REQUEST).json({
           status: 'error',
-          message: 'Title, content and tip_type are required'
+          message: 'Title, description and tip_type are required'
         });
       }
 

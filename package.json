@@ -12,7 +12,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "tsc",
-    "start": "node -r tsconfig-paths/register -r module-alias/register dist/main.js",
+    "start": "node -r tsconfig-paths/register -r module-alias/register dist/src/main.js",
     "dev": "ts-node-dev --respawn --transpile-only --exit-child -r tsconfig-paths/register -r module-alias/register src/main.ts",
     "start:dev": "npm run dev",
     "start:prod": "node -r tsconfig-paths/register -r module-alias/register dist/main.js",
