@@ -499,14 +499,29 @@ export class ContentService {
       throw error;
     }
   }
-
-  // ===== TOPIC CRUD OPERATIONS =====
+  
   private transformDbTopicToDomain(dbTopic: any): Topic {
+    let prerequisites: any[] = [];
+  
+    const raw = dbTopic.prerequisites;
+  
+    if (Array.isArray(raw)) {
+      prerequisites = raw;
+    } else if (typeof raw === 'string' && raw.trim() !== '') {
+      try {
+        const parsed = JSON.parse(raw.trim());
+        prerequisites = Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        logger.warn(`Invalid JSON in prerequisites for topic ${dbTopic.id}: ${raw}`, e);
+      }
+    }
+  
     return {
       ...dbTopic,
-      prerequisites: dbTopic.prerequisites ? JSON.parse(dbTopic.prerequisites as string) : []
+      prerequisites
     };
   }
+  
 
   private transformDbTopicsToDomain(dbTopics: any[]): Topic[] {
     return dbTopics.map(topic => this.transformDbTopicToDomain(topic));
@@ -516,6 +531,7 @@ export class ContentService {
     try {
       logger.info('Getting all topics');
       const dbTopics = await this.contentRepository.getAllTopics();
+      logger.info('Topics retrieved:', dbTopics);
       return this.transformDbTopicsToDomain(dbTopics);
     } catch (error) {
       logger.error('Error getting all topics:', error);
