@@ -5,11 +5,14 @@ RUN apk add --no-cache openssl python3 make g++ git libc6-compat
 
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
+COPY package.json package-lock.json ./
 
-ENV NODE_ENV=development
-RUN npm ci
+# Clean install dependencies
+RUN npm cache clean --force \
+    && npm install -g npm@latest \
+    && npm ci --no-audit --prefer-offline
 
+# Copy remaining files
 COPY prisma ./prisma/
 COPY tsconfig.json ./
 COPY . .
